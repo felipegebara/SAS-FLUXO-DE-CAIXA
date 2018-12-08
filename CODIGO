@@ -1,0 +1,72 @@
+
+
+/* IMPORTE DO ARQUIVO*/
+
+FILENAME REFFILE '/folders/myfolders/sasuser.v94/Begin_EmployeeTheft.xlsx';
+
+PROC IMPORT DATAFILE=REFFILE
+	DBMS=XLSX
+	OUT=WORK.IMPORT;
+	GETNAMES=YES;
+RUN;
+
+/* ANALISE DE OUTLIER*/
+proc freq data=work.import ; table amt;
+run;
+/*retirar os valores ente -5  dolares pois pode ser erro de troco */
+
+
+data base_filtro1;
+set work.import;
+where amt<-5;
+run;
+
+/*rodar uma regressao para determinar se algum funcionario esta roubando a loja*/
+
+
+  proc reg data=base_filtro1;
+      model amt = Employee_1	Employee_2	Employee_3	Employee_4	Employee_5	Employee_6	Employee_7	Employee_8	Manager_1	Manager_2	Manager_3 /noint;
+      
+   run;
+   
+   
+ 
+   
+   /* SUMARIZA PARA ANLISAR SE HOUVE ROUBO */
+   
+   proc sql;
+   create table resume as select
+   Employee_1	,
+   Employee_2	,
+   Employee_3	,
+   Employee_4	,
+   Employee_5	,
+   Employee_6	,
+   Employee_7	,
+   Employee_8	,
+   Manager_1	,
+   Manager_2	,
+   Manager_3,
+   avg(amt) as media
+      from base_filtro1
+      group by 
+   Employee_1	,
+   Employee_2	,
+   Employee_3	,
+   Employee_4	,
+   Employee_5	,
+   Employee_6	,
+   Employee_7	,
+   Employee_8	,
+   Manager_1	,
+   Manager_2	,
+   Manager_3;
+   quit;
+   
+   
+   /* REGRESSAO SUMARIZADA*/
+proc reg data=resume;
+      model media = Employee_1	Employee_2	Employee_3	Employee_4	Employee_5	Employee_6	Employee_7	Employee_8	Manager_1	Manager_2	Manager_3 /noint;
+      
+   run;
+  
